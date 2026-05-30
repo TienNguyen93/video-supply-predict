@@ -1,0 +1,21 @@
+# Normalize line endings to LF in the repo (critical for shell scripts in Docker)
+* text=auto eol=lf
+
+# Force LF for specific file types
+*.sh text eol=lf
+*.py text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.toml text eol=lf
+*.md text eol=lf
+Makefile text eol=lf
+Dockerfile* text eol=lf
+*.gitignore text eol=lf
+
+# Binary files — no line ending conversion
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.zip binary
+*.duckdb binary
