@@ -1,0 +1,22 @@
+serene_hypatia:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      # Resolved from env var so the same profile works locally and in Docker.
+      # Local default:  ./data/warehouse.duckdb (relative to repo root)
+      # Docker default: /data/warehouse.duckdb  (volume mount)
+      path: "{{ env_var('DUCKDB_PATH', '../data/warehouse.duckdb') }}"
+      threads: 4
+      # Default schema for models that don't specify a custom schema.
+      # In practice every model uses +schema: staging/intermediate/marts,
+      # so this is only a fallback.
+      schema: main
+      extensions:
+        - json
+
+    ci:
+      type: duckdb
+      path: "{{ env_var('DUCKDB_PATH', '../data/warehouse.duckdb') }}"
+      threads: 2
+      schema: main

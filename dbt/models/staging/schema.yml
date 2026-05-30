@@ -1,0 +1,68 @@
+version: 2
+
+models:
+  - name: stg_engagement_events
+    description: >
+      Staging view over raw.engagement_events. Typed, renamed, no business logic.
+      One row per (video_id, hours_since_post) snapshot.
+    columns:
+      - name: event_id
+        description: "Unique dedup key: evt_{date}_{video_id}_h{hour:02d}"
+        tests:
+          - unique
+          - not_null
+      - name: video_id
+        tests:
+          - not_null
+      - name: hours_since_post
+        tests:
+          - not_null
+      - name: platform
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['tiktok', 'instagram', 'youtube']
+      - name: creator_tier
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['nano', 'micro', 'mid', 'macro', 'mega']
+      - name: view_count
+        tests:
+          - not_null
+      - name: save_rate
+        tests:
+          - not_null
+      - name: is_viral
+        tests:
+          - not_null
+
+  - name: stg_sku_catalog
+    description: >
+      Staging view over raw.sku_catalog with derived days_of_cover and
+      inventory_risk_tier.
+    columns:
+      - name: sku_id
+        tests:
+          - unique
+          - not_null
+      - name: sku_name
+        tests:
+          - not_null
+      - name: category
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['apparel', 'beauty', 'electronics', 'home', 'fitness',
+                       'food', 'toys', 'accessories']
+      - name: days_of_cover
+        tests:
+          - not_null
+      - name: inventory_risk_tier
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['CRITICAL', 'WARNING', 'WATCH', 'NORMAL']
+      - name: viral_sensitivity
+        tests:
+          - not_null

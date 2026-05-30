@@ -1,0 +1,63 @@
+version: 2
+
+models:
+  - name: int_engagement_features
+    description: >
+      Core feature engineering table. One row per (video_id, hours_since_post).
+      Adds rolling velocity windows, composite engagement score, ordinal-encoded
+      categoricals, SKU viral sensitivity, and time features on top of staging.
+      This is the primary input to the LightGBM training and scoring pipelines.
+    columns:
+      - name: event_id
+        tests:
+          - unique
+          - not_null
+      - name: video_id
+        tests:
+          - not_null
+      - name: hours_since_post
+        tests:
+          - not_null
+      - name: views_velocity_3h
+        description: "Rolling 3-hour sum of views_delta_1h"
+        tests:
+          - not_null
+      - name: engagement_score
+        description: "save_rate×2 + share_rate×3 + click_rate×5"
+        tests:
+          - not_null
+      - name: creator_tier_encoded
+        description: "Ordinal: nano=0, micro=1, mid=2, macro=3, mega=4"
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1, 2, 3, 4]
+      - name: platform_encoded
+        description: "Ordinal: tiktok=0, instagram=1, youtube=2"
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1, 2]
+
+  - name: int_sku_inventory
+    description: >
+      Enriched SKU inventory table. One row per SKU.
+      Joins catalog data with live engagement signals to produce demand
+      pressure proxy, active video count, and urgency score.
+      Used by mart_sku_risk for the Streamlit risk dashboard.
+    columns:
+      - name: sku_id
+        tests:
+          - unique
+          - not_null
+      - name: inventory_risk_tier
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['CRITICAL', 'WARNING', 'WATCH', 'NORMAL']
+      - name: urgency_score
+        tests:
+          - not_null
+      - name: days_of_cover
+        tests:
+          - not_null

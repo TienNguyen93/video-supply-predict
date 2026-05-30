@@ -5,7 +5,6 @@ Provides: temporary DuckDB connection, sample engagement events, settings overri
 
 from __future__ import annotations
 
-import tempfile
 from pathlib import Path
 
 import duckdb

@@ -19,9 +19,7 @@ from __future__ import annotations
 
 import math
 import random
-from datetime import datetime, timedelta, timezone
-
-import numpy as np
+from datetime import UTC, datetime, timedelta
 
 from src.ingestion.schemas import (
     CreatorTier,
@@ -31,29 +29,28 @@ from src.ingestion.schemas import (
     VideoSKUBridge,
 )
 
-
 # ---------------------------------------------------------------------------
 # Creator tier engagement multipliers
 # ---------------------------------------------------------------------------
 
 _TIER_MULTIPLIERS: dict[CreatorTier, dict[str, float]] = {
-    CreatorTier.NANO:   {"reach": 0.4,  "engagement": 1.30},  # small audience, high ER
-    CreatorTier.MICRO:  {"reach": 0.70, "engagement": 1.15},
-    CreatorTier.MID:    {"reach": 1.00, "engagement": 1.00},  # baseline
-    CreatorTier.MACRO:  {"reach": 2.50, "engagement": 0.85},
-    CreatorTier.MEGA:   {"reach": 8.00, "engagement": 0.65},
+    CreatorTier.NANO: {"reach": 0.4, "engagement": 1.30},  # small audience, high ER
+    CreatorTier.MICRO: {"reach": 0.70, "engagement": 1.15},
+    CreatorTier.MID: {"reach": 1.00, "engagement": 1.00},  # baseline
+    CreatorTier.MACRO: {"reach": 2.50, "engagement": 0.85},
+    CreatorTier.MEGA: {"reach": 8.00, "engagement": 0.65},
 }
 
 _PLATFORM_VIRAL_PROB: dict[Platform, float] = {
-    Platform.TIKTOK:    0.15,  # FYP is highly democratised
+    Platform.TIKTOK: 0.15,  # FYP is highly democratised
     Platform.INSTAGRAM: 0.08,  # Explore is more follower-weighted
-    Platform.YOUTUBE:   0.05,  # Shorts algorithm is slower to surface
+    Platform.YOUTUBE: 0.05,  # Shorts algorithm is slower to surface
 }
 
 _REGIONS_BY_PLATFORM: dict[Platform, list[str]] = {
-    Platform.TIKTOK:    ["US", "GB", "AU", "CA", "DE", "FR", "BR", "MX"],
+    Platform.TIKTOK: ["US", "GB", "AU", "CA", "DE", "FR", "BR", "MX"],
     Platform.INSTAGRAM: ["US", "BR", "IN", "GB", "DE", "FR", "IT", "ES"],
-    Platform.YOUTUBE:   ["US", "IN", "BR", "JP", "KR", "GB", "DE", "MX"],
+    Platform.YOUTUBE: ["US", "IN", "BR", "JP", "KR", "GB", "DE", "MX"],
 }
 
 
@@ -114,7 +111,7 @@ def _sample_video_params(
         share_rate_base = rng.uniform(0.02, 0.08) * eng_mult
         click_rate_base = rng.uniform(0.02, 0.08)
         comment_rate_base = rng.uniform(0.005, 0.02) * eng_mult
-        peak_hour = rng.randint(4, 16)   # viral content peaks early
+        peak_hour = rng.randint(4, 16)  # viral content peaks early
     else:
         total_views = rng.uniform(500, 20_000) * tier_mult["reach"]
         like_rate_base = rng.uniform(0.02, 0.08) * eng_mult
@@ -200,7 +197,7 @@ def generate_videos(
     tiers = list(CreatorTier)
 
     # Reference date: simulate 90 days of historical data
-    reference_date = datetime(2024, 1, 1, tzinfo=timezone.utc)
+    reference_date = datetime(2024, 1, 1, tzinfo=UTC)
 
     videos: list[VideoRecord] = []
     for i in range(num_videos):
@@ -211,10 +208,36 @@ def generate_videos(
 
         # Post time: random within the 90-day window, skewed to business hours
         days_offset = rng.randint(0, 89)
-        hour_offset = rng.choices(range(24), weights=[
-            1, 1, 1, 1, 1, 2, 4, 6, 8, 9, 10, 10,
-            10, 10, 9, 9, 10, 12, 12, 11, 9, 7, 4, 2,
-        ], k=1)[0]
+        hour_offset = rng.choices(
+            range(24),
+            weights=[
+                1,
+                1,
+                1,
+                1,
+                1,
+                2,
+                4,
+                6,
+                8,
+                9,
+                10,
+                10,
+                10,
+                10,
+                9,
+                9,
+                10,
+                12,
+                12,
+                11,
+                9,
+                7,
+                4,
+                2,
+            ],
+            k=1,
+        )[0]
         posted_at = reference_date + timedelta(days=days_offset, hours=hour_offset)
 
         # Tag 1–3 SKUs per video (power-law: most videos tag 1)
@@ -282,7 +305,9 @@ def generate_engagement_events(
 
     # FYP/Explore placement correlates with virality
     is_on_foryou = video.is_viral or rng.random() < 0.20
-    trending_rank: int | None = rng.randint(1, 50) if video.is_viral and rng.random() < 0.3 else None
+    trending_rank: int | None = (
+        rng.randint(1, 50) if video.is_viral and rng.random() < 0.3 else None
+    )
 
     events: list[EngagementEvent] = []
     prev_views = 0
@@ -297,7 +322,11 @@ def generate_engagement_events(
 
         if cum_views == 0:
             # First few hours might have 0 views for non-viral
-            events.append(_zero_snapshot(video, hour, is_on_foryou, trending_rank, demand_lift_24h, is_effectively_viral))
+            events.append(
+                _zero_snapshot(
+                    video, hour, is_on_foryou, trending_rank, demand_lift_24h, is_effectively_viral
+                )
+            )
             continue
 
         # Apply slight rate drift over time (engagement rates decay slowly)

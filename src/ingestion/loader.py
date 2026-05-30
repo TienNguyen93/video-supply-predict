@@ -117,12 +117,31 @@ CREATE OR REPLACE TABLE raw.engagement_events (
 );
 """
 
+_DDL_AGENT_ALERTS = """
+CREATE TABLE IF NOT EXISTS raw.agent_alerts (
+    alert_id               VARCHAR PRIMARY KEY,
+    sku_id                 VARCHAR NOT NULL,
+    risk_tier              VARCHAR NOT NULL,
+    p10_demand_lift        DOUBLE,
+    p50_demand_lift        DOUBLE,
+    p90_demand_lift        DOUBLE,
+    investigation_summary  VARCHAR,
+    action_draft           VARCHAR,
+    status                 VARCHAR NOT NULL DEFAULT 'PENDING',
+    approved_at            TIMESTAMPTZ,
+    approved_by            VARCHAR,
+    created_at             TIMESTAMPTZ NOT NULL DEFAULT current_timestamp,
+    updated_at             TIMESTAMPTZ NOT NULL DEFAULT current_timestamp
+);
+"""
+
 _ALL_DDL = [
     _DDL_RAW_SCHEMA,
     _DDL_SKU_CATALOG,
     _DDL_VIDEO_METADATA,
     _DDL_VIDEO_SKU_BRIDGE,
     _DDL_ENGAGEMENT_EVENTS,
+    _DDL_AGENT_ALERTS,  # app-managed; CREATE IF NOT EXISTS (not OR REPLACE)
 ]
 
 
@@ -135,18 +154,20 @@ def skus_to_dataframe(skus: list[SKURecord]) -> pd.DataFrame:
     """Convert SKURecord list to a pandas DataFrame matching raw.sku_catalog."""
     rows = []
     for s in skus:
-        rows.append({
-            "sku_id": s.sku_id,
-            "name": s.name,
-            "category": s.category.value,
-            "unit_price_usd": s.unit_price_usd,
-            "baseline_daily_demand": s.baseline_daily_demand,
-            "current_stock": s.current_stock,
-            "supplier_lead_time_days": s.supplier_lead_time_days,
-            "reorder_point": s.reorder_point,
-            "viral_sensitivity": s.viral_sensitivity,
-            "created_at": s.created_at,
-        })
+        rows.append(
+            {
+                "sku_id": s.sku_id,
+                "name": s.name,
+                "category": s.category.value,
+                "unit_price_usd": s.unit_price_usd,
+                "baseline_daily_demand": s.baseline_daily_demand,
+                "current_stock": s.current_stock,
+                "supplier_lead_time_days": s.supplier_lead_time_days,
+                "reorder_point": s.reorder_point,
+                "viral_sensitivity": s.viral_sensitivity,
+                "created_at": s.created_at,
+            }
+        )
     return pd.DataFrame(rows)
 
 
@@ -154,18 +175,20 @@ def videos_to_dataframe(videos: list[VideoRecord]) -> pd.DataFrame:
     """Convert VideoRecord list to a pandas DataFrame matching raw.video_metadata."""
     rows = []
     for v in videos:
-        rows.append({
-            "video_id": v.video_id,
-            "platform": v.platform.value,
-            "creator_id": v.creator_id,
-            "creator_tier": v.creator_tier.value,
-            "posted_at": v.posted_at,
-            "video_duration_s": v.video_duration_s,
-            "has_link_in_bio": v.has_link_in_bio,
-            "sku_ids_json": json.dumps(v.sku_ids),
-            "region_codes_json": json.dumps(v.region_codes),
-            "is_viral": v.is_viral,
-        })
+        rows.append(
+            {
+                "video_id": v.video_id,
+                "platform": v.platform.value,
+                "creator_id": v.creator_id,
+                "creator_tier": v.creator_tier.value,
+                "posted_at": v.posted_at,
+                "video_duration_s": v.video_duration_s,
+                "has_link_in_bio": v.has_link_in_bio,
+                "sku_ids_json": json.dumps(v.sku_ids),
+                "region_codes_json": json.dumps(v.region_codes),
+                "is_viral": v.is_viral,
+            }
+        )
     return pd.DataFrame(rows)
 
 
@@ -173,12 +196,14 @@ def bridges_to_dataframe(bridges: list[VideoSKUBridge]) -> pd.DataFrame:
     """Convert VideoSKUBridge list to a pandas DataFrame."""
     rows = []
     for b in bridges:
-        rows.append({
-            "video_id": b.video_id,
-            "sku_id": b.sku_id,
-            "platform": b.platform.value,
-            "posted_at": b.posted_at,
-        })
+        rows.append(
+            {
+                "video_id": b.video_id,
+                "sku_id": b.sku_id,
+                "platform": b.platform.value,
+                "posted_at": b.posted_at,
+            }
+        )
     return pd.DataFrame(rows)
 
 
@@ -186,40 +211,42 @@ def events_to_dataframe(events: list[EngagementEvent]) -> pd.DataFrame:
     """Convert EngagementEvent list to a pandas DataFrame matching raw.engagement_events."""
     rows = []
     for e in events:
-        rows.append({
-            "event_id": e.event_id,
-            "video_id": e.video_id,
-            "posted_at": e.posted_at,
-            "snapshot_at": e.snapshot_at,
-            "hours_since_post": e.hours_since_post,
-            "platform": e.platform.value,
-            "creator_id": e.creator_id,
-            "creator_tier": e.creator_tier.value,
-            "sku_ids_json": json.dumps(e.sku_ids),
-            "video_duration_s": e.video_duration_s,
-            "has_link_in_bio": e.has_link_in_bio,
-            "view_count": e.view_count,
-            "like_count": e.like_count,
-            "comment_count": e.comment_count,
-            "share_count": e.share_count,
-            "save_count": e.save_count,
-            "click_to_product": e.click_to_product,
-            "add_to_cart": e.add_to_cart,
-            "save_rate": e.save_rate,
-            "share_rate": e.share_rate,
-            "click_rate": e.click_rate,
-            "cart_rate": e.cart_rate,
-            "like_rate": e.like_rate,
-            "views_delta_1h": e.views_delta_1h,
-            "saves_delta_1h": e.saves_delta_1h,
-            "shares_delta_1h": e.shares_delta_1h,
-            "save_velocity": e.save_velocity,
-            "is_on_foryou": e.is_on_foryou,
-            "trending_rank": e.trending_rank,
-            "region_codes_json": json.dumps(e.region_codes),
-            "demand_lift_24h": e.demand_lift_24h,
-            "is_viral": e.is_viral,
-        })
+        rows.append(
+            {
+                "event_id": e.event_id,
+                "video_id": e.video_id,
+                "posted_at": e.posted_at,
+                "snapshot_at": e.snapshot_at,
+                "hours_since_post": e.hours_since_post,
+                "platform": e.platform.value,
+                "creator_id": e.creator_id,
+                "creator_tier": e.creator_tier.value,
+                "sku_ids_json": json.dumps(e.sku_ids),
+                "video_duration_s": e.video_duration_s,
+                "has_link_in_bio": e.has_link_in_bio,
+                "view_count": e.view_count,
+                "like_count": e.like_count,
+                "comment_count": e.comment_count,
+                "share_count": e.share_count,
+                "save_count": e.save_count,
+                "click_to_product": e.click_to_product,
+                "add_to_cart": e.add_to_cart,
+                "save_rate": e.save_rate,
+                "share_rate": e.share_rate,
+                "click_rate": e.click_rate,
+                "cart_rate": e.cart_rate,
+                "like_rate": e.like_rate,
+                "views_delta_1h": e.views_delta_1h,
+                "saves_delta_1h": e.saves_delta_1h,
+                "shares_delta_1h": e.shares_delta_1h,
+                "save_velocity": e.save_velocity,
+                "is_on_foryou": e.is_on_foryou,
+                "trending_rank": e.trending_rank,
+                "region_codes_json": json.dumps(e.region_codes),
+                "demand_lift_24h": e.demand_lift_24h,
+                "is_viral": e.is_viral,
+            }
+        )
     return pd.DataFrame(rows)
 
 
@@ -294,7 +321,7 @@ class DuckDBLoader:
         total = 0
         for i in range(0, len(events), batch_size):
             batch = events[i : i + batch_size]
-            df = events_to_dataframe(batch)
+            df = events_to_dataframe(batch)  # noqa: F841
             self._con.execute("INSERT OR REPLACE INTO raw.engagement_events SELECT * FROM df")
             total += len(batch)
         log.info("Engagement events loaded", count=total)
@@ -313,7 +340,7 @@ class DuckDBLoader:
         self._con.close()
         log.info("DuckDB connection closed")
 
-    def __enter__(self) -> "DuckDBLoader":
+    def __enter__(self) -> DuckDBLoader:
         return self
 
     def __exit__(self, *_: object) -> None:

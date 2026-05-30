@@ -13,32 +13,31 @@ Derived models used for DuckDB writes:
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Annotated
 
 from pydantic import BaseModel, Field, field_validator, model_validator
-
 
 # ---------------------------------------------------------------------------
 # Enumerations
 # ---------------------------------------------------------------------------
 
 
-class Platform(str, Enum):
+class Platform(StrEnum):
     TIKTOK = "tiktok"
     INSTAGRAM = "instagram"
     YOUTUBE = "youtube"
 
 
-class CreatorTier(str, Enum):
-    NANO = "nano"      # < 10k followers
-    MICRO = "micro"    # 10k – 100k
-    MID = "mid"        # 100k – 500k
-    MACRO = "macro"    # 500k – 1M
-    MEGA = "mega"      # > 1M
+class CreatorTier(StrEnum):
+    NANO = "nano"  # < 10k followers
+    MICRO = "micro"  # 10k – 100k
+    MID = "mid"  # 100k – 500k
+    MACRO = "macro"  # 500k – 1M
+    MEGA = "mega"  # > 1M
 
 
-class SKUCategory(str, Enum):
+class SKUCategory(StrEnum):
     APPAREL = "apparel"
     BEAUTY = "beauty"
     ELECTRONICS = "electronics"
@@ -49,7 +48,7 @@ class SKUCategory(str, Enum):
     ACCESSORIES = "accessories"
 
 
-class RiskTier(str, Enum):
+class RiskTier(StrEnum):
     CRITICAL = "CRITICAL"
     WARNING = "WARNING"
     WATCH = "WATCH"
@@ -68,13 +67,19 @@ class SKURecord(BaseModel):
     name: str = Field(..., description="Human-readable product name")
     category: SKUCategory
     unit_price_usd: Annotated[float, Field(gt=0)]
-    baseline_daily_demand: Annotated[float, Field(gt=0, description="Average units sold per day (no viral event)")]
+    baseline_daily_demand: Annotated[
+        float, Field(gt=0, description="Average units sold per day (no viral event)")
+    ]
     current_stock: Annotated[int, Field(ge=0, description="Current on-hand units")]
     supplier_lead_time_days: Annotated[int, Field(gt=0, le=90)]
     reorder_point: Annotated[int, Field(ge=0, description="Stock level that triggers a reorder")]
     viral_sensitivity: Annotated[
         float,
-        Field(ge=0.0, le=5.0, description="Multiplier: how much this SKU amplifies viral-driven demand (0=none, 5=extreme)"),
+        Field(
+            ge=0.0,
+            le=5.0,
+            description="Viral demand multiplier (0=none, 5=extreme)",
+        ),
     ]
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
@@ -106,7 +111,9 @@ class VideoRecord(BaseModel):
     video_duration_s: Annotated[int, Field(gt=0, le=600)]
     has_link_in_bio: bool
     sku_ids: list[str] = Field(default_factory=list, description="SKUs tagged in this video")
-    region_codes: list[str] = Field(default_factory=list, description="Target regions, e.g. ['US', 'GB']")
+    region_codes: list[str] = Field(
+        default_factory=list, description="Target regions, e.g. ['US', 'GB']"
+    )
     is_viral: bool = Field(default=False)
 
     @field_validator("sku_ids")
@@ -193,7 +200,7 @@ class EngagementEvent(BaseModel):
     is_viral: bool = False
 
     @model_validator(mode="after")
-    def _validate_snapshot_after_post(self) -> "EngagementEvent":
+    def _validate_snapshot_after_post(self) -> EngagementEvent:
         if self.snapshot_at < self.posted_at:
             raise ValueError("snapshot_at must be >= posted_at")
         return self

@@ -1,0 +1,72 @@
+version: 2
+
+models:
+  - name: mart_scored_videos
+    description: >
+      ML-ready feature table with one row per video (latest snapshot).
+      Primary input to LightGBM training and inference.
+      Prediction columns (p10/p50/p90) are null until Phase 4 scoring runs.
+    columns:
+      - name: video_id
+        tests:
+          - unique
+          - not_null
+      - name: platform
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['tiktok', 'instagram', 'youtube']
+      - name: engagement_score
+        tests:
+          - not_null
+      - name: hours_observed
+        tests:
+          - not_null
+      - name: sku_viral_sensitivity
+        tests:
+          - not_null
+
+  - name: mart_sku_risk
+    description: >
+      Per-SKU risk dashboard table. Combines inventory position with social
+      demand signals and urgency scoring. One row per SKU.
+      ML prediction columns (p10/p50/p90) are null until Phase 4.
+    columns:
+      - name: sku_id
+        tests:
+          - unique
+          - not_null
+      - name: inventory_risk_tier
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['CRITICAL', 'WARNING', 'WATCH', 'NORMAL']
+      - name: urgency_score
+        tests:
+          - not_null
+      - name: days_of_cover
+        tests:
+          - not_null
+
+  - name: mart_trending_videos
+    description: >
+      Top 50 videos ranked by engagement_score. Used by the Streamlit
+      viral feed panel. One row per video (latest snapshot only).
+    columns:
+      - name: video_id
+        tests:
+          - unique
+          - not_null
+      - name: engagement_score
+        tests:
+          - not_null
+      - name: rank
+        tests:
+          - unique
+          - not_null
+
+  - name: mart_alert_queue
+    description: >
+      View over raw.agent_alerts joined with SKU risk context.
+      Populated by the LangGraph action agent (Phase 5).
+      dbt owns the view definition; the app owns the data.

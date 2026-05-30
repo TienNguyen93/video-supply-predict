@@ -7,21 +7,19 @@ Tests: field validation, enum coercion, derived properties,
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 import pytest
-from datetime import datetime, timezone
 from pydantic import ValidationError
 
 from src.ingestion.schemas import (
     CreatorTier,
     EngagementEvent,
     Platform,
-    RiskTier,
     SKUCategory,
     SKURecord,
     VideoRecord,
-    VideoSKUBridge,
 )
-
 
 # ---------------------------------------------------------------------------
 # SKURecord
@@ -41,7 +39,7 @@ class TestSKURecord:
             "supplier_lead_time_days": 14,
             "reorder_point": 200,
             "viral_sensitivity": 2.5,
-            "created_at": datetime.now(tz=timezone.utc),
+            "created_at": datetime.now(tz=UTC),
         }
         base.update(overrides)
         return base
@@ -95,7 +93,7 @@ class TestVideoRecord:
             "platform": Platform.TIKTOK,
             "creator_id": "creator_1234",
             "creator_tier": CreatorTier.MICRO,
-            "posted_at": datetime(2024, 3, 15, 12, 0, tzinfo=timezone.utc),
+            "posted_at": datetime(2024, 3, 15, 12, 0, tzinfo=UTC),
             "video_duration_s": 38,
             "has_link_in_bio": True,
             "sku_ids": ["SKU-0001"],
@@ -131,8 +129,8 @@ class TestVideoRecord:
 @pytest.mark.unit
 class TestEngagementEvent:
     def _valid_event(self, **overrides) -> dict:
-        posted = datetime(2024, 3, 15, 0, 0, tzinfo=timezone.utc)
-        snap = datetime(2024, 3, 15, 3, 0, tzinfo=timezone.utc)
+        posted = datetime(2024, 3, 15, 0, 0, tzinfo=UTC)
+        snap = datetime(2024, 3, 15, 3, 0, tzinfo=UTC)
         base = {
             "event_id": "evt_20240315_vid_0001_h03",
             "video_id": "vid_0001",
@@ -177,8 +175,8 @@ class TestEngagementEvent:
         assert e.demand_lift_24h == pytest.approx(4.2)
 
     def test_snapshot_before_posted_rejected(self):
-        posted = datetime(2024, 3, 15, 12, 0, tzinfo=timezone.utc)
-        snap = datetime(2024, 3, 15, 11, 0, tzinfo=timezone.utc)  # 1h before posting
+        posted = datetime(2024, 3, 15, 12, 0, tzinfo=UTC)
+        snap = datetime(2024, 3, 15, 11, 0, tzinfo=UTC)  # 1h before posting
         with pytest.raises(ValidationError, match="snapshot_at must be >= posted_at"):
             EngagementEvent(**self._valid_event(posted_at=posted, snapshot_at=snap))
 

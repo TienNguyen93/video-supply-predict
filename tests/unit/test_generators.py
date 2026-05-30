@@ -15,8 +15,7 @@ from src.ingestion.generators.video_generator import (
     generate_video_sku_bridges,
     generate_videos,
 )
-from src.ingestion.schemas import CreatorTier, EngagementEvent, Platform, SKURecord, VideoRecord
-
+from src.ingestion.schemas import EngagementEvent, Platform, SKURecord, VideoRecord
 
 # ---------------------------------------------------------------------------
 # SKU Generator
@@ -149,48 +148,64 @@ class TestEngagementEventGenerator:
 
     def test_returns_correct_snapshot_count(self, sample_video_and_map):
         video, sku_map = sample_video_and_map
-        events = generate_engagement_events(video=video, sku_sensitivity_map=sku_map, snapshot_hours=48)
+        events = generate_engagement_events(
+            video=video, sku_sensitivity_map=sku_map, snapshot_hours=48
+        )
         assert len(events) == 48
 
     def test_all_are_engagement_events(self, sample_video_and_map):
         video, sku_map = sample_video_and_map
-        events = generate_engagement_events(video=video, sku_sensitivity_map=sku_map, snapshot_hours=48)
+        events = generate_engagement_events(
+            video=video, sku_sensitivity_map=sku_map, snapshot_hours=48
+        )
         assert all(isinstance(e, EngagementEvent) for e in events)
 
     def test_event_ids_are_unique(self, sample_video_and_map):
         video, sku_map = sample_video_and_map
-        events = generate_engagement_events(video=video, sku_sensitivity_map=sku_map, snapshot_hours=48)
+        events = generate_engagement_events(
+            video=video, sku_sensitivity_map=sku_map, snapshot_hours=48
+        )
         ids = [e.event_id for e in events]
         assert len(ids) == len(set(ids))
 
     def test_view_count_is_non_decreasing(self, sample_video_and_map):
         video, sku_map = sample_video_and_map
-        events = generate_engagement_events(video=video, sku_sensitivity_map=sku_map, snapshot_hours=48)
+        events = generate_engagement_events(
+            video=video, sku_sensitivity_map=sku_map, snapshot_hours=48
+        )
         view_counts = [e.view_count for e in events]
         for i in range(1, len(view_counts)):
             assert view_counts[i] >= view_counts[i - 1], (
-                f"View count decreased at hour {i}: {view_counts[i-1]} → {view_counts[i]}"
+                f"View count decreased at hour {i}: {view_counts[i - 1]} → {view_counts[i]}"
             )
 
     def test_hours_since_post_is_sequential(self, sample_video_and_map):
         video, sku_map = sample_video_and_map
-        events = generate_engagement_events(video=video, sku_sensitivity_map=sku_map, snapshot_hours=48)
+        events = generate_engagement_events(
+            video=video, sku_sensitivity_map=sku_map, snapshot_hours=48
+        )
         assert [e.hours_since_post for e in events] == list(range(48))
 
     def test_demand_lift_24h_is_set(self, sample_video_and_map):
         """demand_lift_24h should be populated for all historical events."""
         video, sku_map = sample_video_and_map
-        events = generate_engagement_events(video=video, sku_sensitivity_map=sku_map, snapshot_hours=48)
+        events = generate_engagement_events(
+            video=video, sku_sensitivity_map=sku_map, snapshot_hours=48
+        )
         assert all(e.demand_lift_24h is not None for e in events)
 
     def test_demand_lift_positive(self, sample_video_and_map):
         video, sku_map = sample_video_and_map
-        events = generate_engagement_events(video=video, sku_sensitivity_map=sku_map, snapshot_hours=48)
+        events = generate_engagement_events(
+            video=video, sku_sensitivity_map=sku_map, snapshot_hours=48
+        )
         assert all(e.demand_lift_24h > 0 for e in events)
 
     def test_rates_in_bounds(self, sample_video_and_map):
         video, sku_map = sample_video_and_map
-        events = generate_engagement_events(video=video, sku_sensitivity_map=sku_map, snapshot_hours=48)
+        events = generate_engagement_events(
+            video=video, sku_sensitivity_map=sku_map, snapshot_hours=48
+        )
         for e in events:
             assert 0 <= e.save_rate <= 1
             assert 0 <= e.share_rate <= 1
@@ -200,7 +215,9 @@ class TestEngagementEventGenerator:
 
     def test_snapshot_at_is_after_posted_at(self, sample_video_and_map):
         video, sku_map = sample_video_and_map
-        events = generate_engagement_events(video=video, sku_sensitivity_map=sku_map, snapshot_hours=48)
+        events = generate_engagement_events(
+            video=video, sku_sensitivity_map=sku_map, snapshot_hours=48
+        )
         for e in events:
             assert e.snapshot_at >= e.posted_at
 

@@ -50,9 +50,14 @@ def compute_velocity_features(df: pd.DataFrame) -> pd.DataFrame:
         DataFrame with new columns appended.
     """
     required_cols = {
-        "video_id", "hours_since_post",
-        "views_delta_1h", "saves_delta_1h", "shares_delta_1h",
-        "save_rate", "share_rate", "click_rate",
+        "video_id",
+        "hours_since_post",
+        "views_delta_1h",
+        "saves_delta_1h",
+        "shares_delta_1h",
+        "save_rate",
+        "share_rate",
+        "click_rate",
     }
     missing = required_cols - set(df.columns)
     if missing:
@@ -63,8 +68,8 @@ def compute_velocity_features(df: pd.DataFrame) -> pd.DataFrame:
 
     # --------------- Rolling 3-hour windows (grouped by video) ---------------
     for col, out in [
-        ("views_delta_1h",  "views_velocity_3h"),
-        ("saves_delta_1h",  "saves_velocity_3h"),
+        ("views_delta_1h", "views_velocity_3h"),
+        ("saves_delta_1h", "saves_velocity_3h"),
         ("shares_delta_1h", "shares_velocity_3h"),
     ]:
         df[out] = (
@@ -76,16 +81,12 @@ def compute_velocity_features(df: pd.DataFrame) -> pd.DataFrame:
 
     # --------------- Acceleration (first-order difference of hourly views) ---
     df["views_acceleration"] = (
-        df.groupby("video_id")["views_delta_1h"]
-        .transform(lambda x: x.diff().fillna(0))
-        .astype(int)
+        df.groupby("video_id")["views_delta_1h"].transform(lambda x: x.diff().fillna(0)).astype(int)
     )
 
     # --------------- Composite engagement score ------------------------------
     df["engagement_score"] = (
-        df["save_rate"] * 2.0
-        + df["share_rate"] * 3.0
-        + df["click_rate"] * 5.0
+        df["save_rate"] * 2.0 + df["share_rate"] * 3.0 + df["click_rate"] * 5.0
     ).round(6)
 
     log.debug(
@@ -115,7 +116,14 @@ def compute_engagement_rates(df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         DataFrame with refreshed rate columns.
     """
-    required = {"view_count", "like_count", "save_count", "share_count", "click_to_product", "add_to_cart"}
+    required = {
+        "view_count",
+        "like_count",
+        "save_count",
+        "share_count",
+        "click_to_product",
+        "add_to_cart",
+    }
     missing = required - set(df.columns)
     if missing:
         raise ValueError(f"compute_engagement_rates: missing columns {missing}")

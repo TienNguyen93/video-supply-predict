@@ -12,10 +12,9 @@ Each SKU has:
 from __future__ import annotations
 
 import random
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from src.ingestion.schemas import SKUCategory, SKURecord
-
 
 # ---------------------------------------------------------------------------
 # Category-level parameter distributions
@@ -24,12 +23,17 @@ from src.ingestion.schemas import SKUCategory, SKURecord
 _CATEGORY_CONFIG: dict[SKUCategory, dict] = {
     SKUCategory.BEAUTY: {
         "lead_time_range": (7, 21),
-        "demand_range": (20, 150),   # units/day
+        "demand_range": (20, 150),  # units/day
         "price_range": (12.0, 95.0),
         "viral_sensitivity_range": (1.5, 4.5),  # beauty goes massively viral
         "products": [
-            "Hydrating Serum", "Glow Toner", "SPF50 Sunscreen", "Vitamin C Cream",
-            "Retinol Night Cream", "Lip Plumper Gloss", "Brow Lamination Kit",
+            "Hydrating Serum",
+            "Glow Toner",
+            "SPF50 Sunscreen",
+            "Vitamin C Cream",
+            "Retinol Night Cream",
+            "Lip Plumper Gloss",
+            "Brow Lamination Kit",
         ],
     },
     SKUCategory.APPAREL: {
@@ -38,8 +42,12 @@ _CATEGORY_CONFIG: dict[SKUCategory, dict] = {
         "price_range": (18.0, 120.0),
         "viral_sensitivity_range": (0.8, 3.5),
         "products": [
-            "Viral Dance Shorts", "Cloud Joggers", "Oversized Hoodie",
-            "Y2K Cargo Pants", "Linen Blazer", "Mini Slip Dress",
+            "Viral Dance Shorts",
+            "Cloud Joggers",
+            "Oversized Hoodie",
+            "Y2K Cargo Pants",
+            "Linen Blazer",
+            "Mini Slip Dress",
         ],
     },
     SKUCategory.FITNESS: {
@@ -48,8 +56,12 @@ _CATEGORY_CONFIG: dict[SKUCategory, dict] = {
         "price_range": (25.0, 180.0),
         "viral_sensitivity_range": (1.0, 3.5),
         "products": [
-            "Resistance Band Set", "Adjustable Dumbbell", "Yoga Block Set",
-            "Jump Rope Pro", "Ab Roller Wheel", "Foam Roller",
+            "Resistance Band Set",
+            "Adjustable Dumbbell",
+            "Yoga Block Set",
+            "Jump Rope Pro",
+            "Ab Roller Wheel",
+            "Foam Roller",
         ],
     },
     SKUCategory.HOME: {
@@ -58,8 +70,12 @@ _CATEGORY_CONFIG: dict[SKUCategory, dict] = {
         "price_range": (15.0, 250.0),
         "viral_sensitivity_range": (0.5, 2.5),
         "products": [
-            "Aesthetic Desk Lamp", "Linen Throw Blanket", "Scented Candle Set",
-            "Bamboo Cutting Board", "Minimalist Clock", "Terrarium Kit",
+            "Aesthetic Desk Lamp",
+            "Linen Throw Blanket",
+            "Scented Candle Set",
+            "Bamboo Cutting Board",
+            "Minimalist Clock",
+            "Terrarium Kit",
         ],
     },
     SKUCategory.ELECTRONICS: {
@@ -68,8 +84,12 @@ _CATEGORY_CONFIG: dict[SKUCategory, dict] = {
         "price_range": (25.0, 400.0),
         "viral_sensitivity_range": (0.5, 2.0),
         "products": [
-            "Mini Projector", "Wireless Charging Pad", "LED Strip Lights",
-            "Bluetooth Earbuds", "USB-C Hub", "Ring Light Stand",
+            "Mini Projector",
+            "Wireless Charging Pad",
+            "LED Strip Lights",
+            "Bluetooth Earbuds",
+            "USB-C Hub",
+            "Ring Light Stand",
         ],
     },
     SKUCategory.FOOD: {
@@ -78,8 +98,12 @@ _CATEGORY_CONFIG: dict[SKUCategory, dict] = {
         "price_range": (8.0, 60.0),
         "viral_sensitivity_range": (1.5, 4.0),  # food trends blow up fast
         "products": [
-            "Whipped Coffee Mix", "Boba Kit", "Korean BBQ Sauce",
-            "Matcha Powder", "Chili Crisp Oil", "Vegan Protein Bar Box",
+            "Whipped Coffee Mix",
+            "Boba Kit",
+            "Korean BBQ Sauce",
+            "Matcha Powder",
+            "Chili Crisp Oil",
+            "Vegan Protein Bar Box",
         ],
     },
     SKUCategory.TOYS: {
@@ -88,8 +112,11 @@ _CATEGORY_CONFIG: dict[SKUCategory, dict] = {
         "price_range": (12.0, 80.0),
         "viral_sensitivity_range": (1.2, 4.5),
         "products": [
-            "Magnetic Tiles Set", "Kinetic Sand Kit", "Mini Claw Machine",
-            "Glow-in-Dark Slime", "Pop-It Fidget Set",
+            "Magnetic Tiles Set",
+            "Kinetic Sand Kit",
+            "Mini Claw Machine",
+            "Glow-in-Dark Slime",
+            "Pop-It Fidget Set",
         ],
     },
     SKUCategory.ACCESSORIES: {
@@ -98,8 +125,12 @@ _CATEGORY_CONFIG: dict[SKUCategory, dict] = {
         "price_range": (10.0, 95.0),
         "viral_sensitivity_range": (1.0, 3.8),
         "products": [
-            "Aesthetic Phone Case", "Pearl Hair Clips", "Mini Crossbody Bag",
-            "Layered Necklace Set", "Sunglasses Vintage", "Silk Scrunchie Pack",
+            "Aesthetic Phone Case",
+            "Pearl Hair Clips",
+            "Mini Crossbody Bag",
+            "Layered Necklace Set",
+            "Sunglasses Vintage",
+            "Silk Scrunchie Pack",
         ],
     },
 }
@@ -179,7 +210,7 @@ def generate_sku_catalog(
                 supplier_lead_time_days=lead_time,
                 reorder_point=reorder_point,
                 viral_sensitivity=viral_sensitivity,
-                created_at=datetime.now(tz=timezone.utc),
+                created_at=datetime.now(tz=UTC),
             )
             skus.append(sku)
             sku_idx += 1
