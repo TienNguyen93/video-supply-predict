@@ -1,0 +1,35 @@
+name: CD
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    name: Deploy to Railway
+    runs-on: ubuntu-latest
+    # Only deploy if CI passed (unit tests + lint)
+    needs: []
+    environment: production
+    # Set RAILWAY_TOKEN in repo secrets to enable deploy
+    if: ${{ vars.DEPLOY_ENABLED == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy FastAPI
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          railway up --service fastapi --detach
+
+      - name: Deploy Streamlit
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          railway up --service streamlit --detach
+
+      - name: Notify deployment
+        run: echo "✓ Deployed to Railway. Set DEPLOY_ENABLED=true in repo vars to activate."

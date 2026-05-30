@@ -1,0 +1,181 @@
+---
+# ============================================================
+# serene-hypatia — Docker Compose
+# Services: airflow-scheduler, airflow-webserver, airflow-worker,
+#           fastapi, streamlit, mlflow
+# DuckDB lives as a volume-mounted file (no separate container).
+# ============================================================
+x-airflow-common: &airflow-common
+  build:
+    context: ..
+    dockerfile: docker/airflow.Dockerfile
+  env_file: ../.env
+  environment:
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow_home/airflow.db
+    AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+    AIRFLOW__WEBSERVER__SECRET_KEY: "${AIRFLOW__WEBSERVER__SECRET_KEY:-changeme_in_prod}"
+    AIRFLOW__CORE__FERNET_KEY: ""
+    MLFLOW_TRACKING_URI: "http://mlflow:5000"
+    DUCKDB_PATH: /data/warehouse.duckdb
+  volumes:
+    - ../dags:/opt/airflow/dags
+    - ../dbt:/opt/airflow/dbt
+    - ../src:/opt/airflow/src
+    - ../configs:/opt/airflow/configs
+    - airflow_logs:/opt/airflow/airflow_home/logs
+    - duckdb_data:/data
+  depends_on:
+    mlflow:
+      condition: service_healthy
+  networks:
+    - backend
+
+services:
+  # ------------------------------------------------------------------
+  # Airflow — init (runs once, then exits)
+  # ------------------------------------------------------------------
+  airflow-init:
+    <<: *airflow-common
+    command: >
+      bash -c "
+        airflow db migrate &&
+        airflow users create
+          --username admin
+          --firstname Admin
+          --lastname User
+          --role Admin
+          --email admin@example.com
+          --password admin
+      "
+    restart: "no"
+
+  # ------------------------------------------------------------------
+  # Airflow — webserver
+  # ------------------------------------------------------------------
+  airflow-webserver:
+    <<: *airflow-common
+    command: airflow webserver
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+
+  # ------------------------------------------------------------------
+  # Airflow — scheduler
+  # ------------------------------------------------------------------
+  airflow-scheduler:
+    <<: *airflow-common
+    command: airflow scheduler
+    healthcheck:
+      test: ["CMD", "airflow", "jobs", "check", "--job-type", "SchedulerJob", "--hostname", "$${HOSTNAME}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+
+  # ------------------------------------------------------------------
+  # MLflow — tracking server
+  # ------------------------------------------------------------------
+  mlflow:
+    build:
+      context: ..
+      dockerfile: docker/mlflow.Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow_data:/mlflow
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+    networks:
+      - backend
+
+  # ------------------------------------------------------------------
+  # FastAPI — scoring + alert queue API
+  # ------------------------------------------------------------------
+  fastapi:
+    build:
+      context: ..
+      dockerfile: docker/app.Dockerfile
+    command: uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --workers 2 --reload
+    ports:
+      - "8000:8000"
+    env_file: ../.env
+    environment:
+      MLFLOW_TRACKING_URI: "http://mlflow:5000"
+      DUCKDB_PATH: /data/warehouse.duckdb
+    volumes:
+      - ../src:/app/src
+      - ../configs:/app/configs
+      - duckdb_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+    depends_on:
+      mlflow:
+        condition: service_healthy
+    networks:
+      - backend
+      - frontend
+
+  # ------------------------------------------------------------------
+  # Streamlit — ops dashboard
+  # ------------------------------------------------------------------
+  streamlit:
+    build:
+      context: ..
+      dockerfile: docker/app.Dockerfile
+    command: streamlit run src/dashboard/app.py --server.port 8501 --server.address 0.0.0.0
+    ports:
+      - "8501:8501"
+    env_file: ../.env
+    environment:
+      STREAMLIT_API_BASE_URL: "http://fastapi:8000"
+      DUCKDB_PATH: /data/warehouse.duckdb
+    volumes:
+      - ../src:/app/src
+      - ../configs:/app/configs
+      - duckdb_data:/data
+    restart: unless-stopped
+    depends_on:
+      fastapi:
+        condition: service_healthy
+    networks:
+      - frontend
+
+# ------------------------------------------------------------------
+# Volumes
+# ------------------------------------------------------------------
+volumes:
+  duckdb_data:          # shared between airflow, fastapi, streamlit
+  mlflow_data:          # mlflow tracking DB + artifacts
+  airflow_logs:         # airflow task logs
+
+# ------------------------------------------------------------------
+# Networks
+# ------------------------------------------------------------------
+networks:
+  backend:              # airflow ↔ mlflow ↔ fastapi
+  frontend:             # fastapi ↔ streamlit

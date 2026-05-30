@@ -1,0 +1,79 @@
+# ============================================================
+# .gitignore — serene-hypatia
+# ============================================================
+
+# --- Environment ---
+.env
+.env.local
+.env.*.local
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+*.egg
+.installed.cfg
+pip-selfcheck.json
+
+# --- Virtual environments ---
+.venv/
+venv/
+env/
+ENV/
+
+# --- Data & warehouse ---
+data/
+*.duckdb
+*.duckdb.wal
+
+# --- MLflow artifacts (local) ---
+mlruns/
+mlartifacts/
+
+# --- Logs ---
+logs/
+*.log
+airflow_home/logs/
+
+# --- Airflow ---
+airflow_home/
+airflow.db
+airflow.cfg
+
+# --- dbt ---
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+dbt/.user.yml
+
+# --- pytest / coverage ---
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.ruff_cache/
+.mypy_cache/
+
+# --- IDE ---
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+
+# --- Docker ---
+docker/postgres_data/
+
+# --- Jupyter ---
+.ipynb_checkpoints/
+*.ipynb

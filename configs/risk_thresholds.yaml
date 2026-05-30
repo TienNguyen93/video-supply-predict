@@ -1,0 +1,61 @@
+# ============================================================
+# Risk Tier Thresholds
+# The triage agent uses these to classify predictions.
+# All values refer to P90 demand lift multiplier and
+# days-of-cover (current_stock / baseline_daily_demand).
+# ============================================================
+
+tiers:
+  CRITICAL:
+    description: >
+      Immediate action required. Predicted demand spike will exhaust stock
+      before a standard replenishment order can arrive.
+    conditions:
+      p90_lift_min: 3.0          # P90 demand lift >= 3x baseline
+      days_cover_max: 7          # Current stock lasts < 7 days
+      # Lead time check: days_cover < supplier_lead_time_days
+      lead_time_buffer_days: 0
+    action: draft_purchase_order
+    slack_notify: true
+    color: "#FF3B30"             # Red
+
+  WARNING:
+    description: >
+      Elevated risk. Stock may run low if the spike materialises at
+      the P90 scenario. Human review recommended within 4 hours.
+    conditions:
+      p90_lift_min: 2.0          # P90 demand lift >= 2x baseline
+      days_cover_max: 14         # Current stock lasts < 14 days
+      lead_time_buffer_days: 2   # days_cover < lead_time + 2
+    action: draft_alert
+    slack_notify: true
+    color: "#FF9500"             # Orange
+
+  WATCH:
+    description: >
+      Engagement is elevated but inventory position is comfortable.
+      Re-evaluate next hourly cycle.
+    conditions:
+      p90_lift_min: 1.5          # P90 demand lift >= 1.5x baseline
+      days_cover_max: 30
+    action: log_and_recheck
+    slack_notify: false
+    color: "#FFCC00"             # Yellow
+
+  NORMAL:
+    description: No significant demand signal detected.
+    conditions:
+      p90_lift_min: 0.0
+      days_cover_max: 9999
+    action: none
+    slack_notify: false
+    color: "#34C759"             # Green
+
+# Minimum P90 lift to trigger the LangGraph pipeline at all
+agent_trigger_lift_threshold: 1.5
+
+# Maximum alerts per hour (rate-limiting to avoid Slack spam)
+max_alerts_per_hour: 20
+
+# How many hours to suppress duplicate alerts for the same SKU
+alert_cooldown_hours: 4

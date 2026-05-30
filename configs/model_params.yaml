@@ -1,0 +1,62 @@
+# ============================================================
+# LightGBM Hyperparameters
+# Each quantile (P10, P50, P90) uses the same base params
+# but different alpha/objective. Override per quantile as needed.
+# ============================================================
+
+base:
+  boosting_type: gbdt
+  n_estimators: 500
+  learning_rate: 0.05
+  num_leaves: 63
+  max_depth: -1
+  min_child_samples: 20
+  subsample: 0.8
+  subsample_freq: 5
+  colsample_bytree: 0.8
+  reg_alpha: 0.1
+  reg_lambda: 0.1
+  n_jobs: -1
+  random_state: 42
+  verbose: -1
+
+quantile_overrides:
+  p10:
+    objective: quantile
+    alpha: 0.10
+    # Conservative estimate — used for safety stock lower bound
+  p50:
+    objective: quantile
+    alpha: 0.50
+    # Median expected demand lift
+  p90:
+    objective: quantile
+    alpha: 0.90
+    # Worst-case lift — drives replenishment and alert decisions
+
+# Early stopping
+early_stopping_rounds: 50
+eval_metric: quantile  # LightGBM quantile loss
+
+# Features used for training (must match mart_scored_videos columns)
+feature_columns:
+  - save_velocity
+  - share_rate
+  - cart_rate
+  - like_rate
+  - click_rate
+  - views_delta_1h
+  - saves_delta_1h
+  - shares_delta_1h
+  - hours_since_post
+  - is_on_foryou
+  - has_link_in_bio
+  - video_duration_s
+  - creator_tier_encoded   # label-encoded: nano=0, micro=1, mid=2, macro=3, mega=4
+  - sku_viral_sensitivity  # historical viral lift rate for this SKU
+  - platform_encoded       # tiktok=0, instagram=1, youtube=2
+
+target_column: demand_lift_24h
+
+# Train/validation split
+train_val_split: 0.8
