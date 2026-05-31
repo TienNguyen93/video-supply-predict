@@ -39,6 +39,7 @@ SELECT
     event_id                                        AS latest_event_id,
     posted_at,
     snapshot_at                                     AS last_snapshot_at,
+    hours_since_post,
     hours_since_post                                AS hours_observed,
     view_count,
 
