@@ -29,7 +29,7 @@ MODEL_SAVE_DIR = settings.project_root / "data" / "models"
 MODEL_SAVE_PATH = MODEL_SAVE_DIR / "quantile_models.pkl"
 
 
-class QuantileLGBMModel(mlflow.pyfunc.PythonModel):
+class QuantileLGBMModel(mlflow.pyfunc.PythonModel):  # type: ignore[name-defined]
     """
     Unified MLflow pyfunc wrapper for three quantile models (P10, P50, P90).
     Allows running predictions for all three quantiles in a single inference call.

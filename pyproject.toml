@@ -37,6 +37,7 @@ dependencies = [
 
   # --- Dashboard ---
   "streamlit>=1.35.0",
+  "streamlit-autorefresh>=0.0.1",
   "plotly>=5.22.0",
 
   # --- Config / Validation ---

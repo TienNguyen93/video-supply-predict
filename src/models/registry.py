@@ -73,3 +73,21 @@ def get_latest_production_version(model_name: str) -> str | None:
             error=str(e),
         )
     return None
+
+
+def promote_latest_model_version(model_name: str) -> bool:
+    """Find the latest registered version of a model and promote it to Production."""
+    try:
+        client = MlflowClient()
+        # Fetch latest versions across stages
+        versions = client.get_latest_versions(
+            model_name, stages=["None", "Staging", "Archived", "Production"]
+        )
+        if not versions:
+            log.warning("No registered model versions found to promote", model_name=model_name)
+            return False
+        latest_version = max(int(v.version) for v in versions)
+        return promote_model_to_production(model_name, latest_version)
+    except Exception as e:
+        log.error("Failed to promote latest model version", model_name=model_name, error=str(e))
+        return False

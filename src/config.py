@@ -51,7 +51,7 @@ class Settings(BaseSettings):
     # LLM — Groq
     # ------------------------------------------------------------------
     groq_api_key: str | None = Field(default=None)
-    groq_model: str = Field(default="llama3-70b-8192")
+    groq_model: str = Field(default="llama-3.3-70b-versatile")
 
     # ------------------------------------------------------------------
     # Slack
