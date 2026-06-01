@@ -1,7 +1,5 @@
-# serene-hypatia
-
-> **Short Video → Product Demand Signal**  
-> Viral engagement → SKU demand lift prediction → automated replenishment alerts
+# **Short Video → Product Demand Signal**  
+## Viral engagement → SKU demand lift prediction → automated replenishment alerts
 
 ---
 
