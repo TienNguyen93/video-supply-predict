@@ -44,7 +44,7 @@ with DAG(
     "weekly_model_retraining",
     default_args=default_args,
     description="Retrain LightGBM models and register in MLflow weekly",
-    schedule_interval="0 3 * * 0",
+    schedule="0 3 * * 0",
     catchup=False,
 ) as dag:
     retrain_models = PythonOperator(

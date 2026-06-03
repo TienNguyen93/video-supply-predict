@@ -42,7 +42,7 @@ with DAG(
     "hourly_engagement_pipeline",
     default_args=default_args,
     description="Simulate hourly snapshots, transform features, score, and agent triage",
-    schedule_interval="@hourly",
+    schedule="@hourly",
     catchup=False,
 ) as dag:
     ingest_snapshots = PythonOperator(

@@ -50,7 +50,7 @@ with DAG(
     "daily_baseline_refresh",
     default_args=default_args,
     description="Deplete current stock and vary baseline demand daily",
-    schedule_interval="0 2 * * *",
+    schedule="0 2 * * *",
     catchup=False,
 ) as dag:
     refresh_baselines = PythonOperator(
