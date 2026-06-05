@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 USER airflow
 
 # Copy and install the project package
-COPY --chown=airflow:root pyproject.toml /opt/airflow/
+COPY --chown=airflow:root pyproject.toml README.md /opt/airflow/
 COPY --chown=airflow:root src/ /opt/airflow/src/
 
 # Install project in editable mode so DAGs can import from src.*

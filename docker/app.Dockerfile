@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 # Copy dependency manifest first for layer caching
-COPY pyproject.toml ./
+COPY pyproject.toml README.md ./
 
 # Install all runtime deps (no dev extras)
 RUN pip install --no-cache-dir \
