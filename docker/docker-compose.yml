@@ -12,7 +12,7 @@ x-airflow-common: &airflow-common
   env_file: ../.env
   environment:
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
-    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow_home/airflow.db
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow.db
     AIRFLOW__CORE__LOAD_EXAMPLES: "false"
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
     AIRFLOW__WEBSERVER__SECRET_KEY: "${AIRFLOW__WEBSERVER__SECRET_KEY:-changeme_in_prod}"
@@ -24,7 +24,7 @@ x-airflow-common: &airflow-common
     - ../dbt:/opt/airflow/dbt
     - ../src:/opt/airflow/src
     - ../configs:/opt/airflow/configs
-    - airflow_logs:/opt/airflow/airflow_home/logs
+    - airflow_logs:/opt/airflow/logs
     - duckdb_data:/data
   depends_on:
     mlflow:
