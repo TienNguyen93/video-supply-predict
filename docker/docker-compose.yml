@@ -12,7 +12,7 @@ x-airflow-common: &airflow-common
   env_file: ../.env
   environment:
     AIRFLOW__CORE__EXECUTOR: SequentialExecutor
-    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow.db
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/db/airflow.db
     AIRFLOW__CORE__LOAD_EXAMPLES: "false"
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
     AIRFLOW__WEBSERVER__SECRET_KEY: "${AIRFLOW__WEBSERVER__SECRET_KEY:-changeme_in_prod}"
@@ -25,6 +25,7 @@ x-airflow-common: &airflow-common
     - ../src:/opt/airflow/src
     - ../configs:/opt/airflow/configs
     - airflow_logs:/opt/airflow/logs
+    - airflow_db:/opt/airflow/db
     - duckdb_data:/data
   depends_on:
     mlflow:
@@ -163,6 +164,7 @@ volumes:
   duckdb_data:          # shared between airflow, fastapi, streamlit
   mlflow_data:          # mlflow tracking DB + artifacts
   airflow_logs:         # airflow task logs
+  airflow_db:           # sqlite database shared between airflow containers
 
 # ------------------------------------------------------------------
 # Networks
